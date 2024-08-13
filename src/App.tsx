@@ -20,9 +20,8 @@ export const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<Filter>(Filter.All);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
-  const [deletingTodosIds, setDeletingTodosIds] = useState<number[]>([]);
+  const [todosIds, setTodosIds] = useState<number[]>([]);
   const [isInputDisabled, setIsInputDisabled] = useState(false);
-  const [updatingTodosIds, setUpdatingTodosIds] = useState<number[]>([]);
   const [editTodo, setEditingTodo] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const inputField = useRef<HTMLInputElement>(null);
@@ -122,12 +121,12 @@ export const App: React.FC = () => {
 
   const updateTodoStatus = (todoId: number) => {
     setEditingTodo(null);
-    setUpdatingTodosIds(prev => [...prev, todoId]);
+    setTodosIds(prev => [...prev, todoId]);
 
     const todoToUpdate = todos.find(todo => todo.id === todoId);
 
     if (!todoToUpdate) {
-      setUpdatingTodosIds(prev => prev.filter(id => id !== todoId));
+      setTodosIds(prev => prev.filter(id => id !== todoId));
 
       return;
     }
@@ -150,17 +149,17 @@ export const App: React.FC = () => {
         }, 3000);
       })
       .finally(() => {
-        setUpdatingTodosIds(prev => prev.filter(id => id !== todoId));
+        setTodosIds(prev => prev.filter(id => id !== todoId));
       });
   };
 
   const handleDeleteTodo = (todoId: number) => {
-    setDeletingTodosIds(prev => [...prev, todoId]);
+    setTodosIds(prev => [...prev, todoId]);
 
     deleteTodos(todoId)
       .then(() => {
         setTodos(prev => prev.filter(todo => todo.id !== todoId));
-        setDeletingTodosIds(prev => prev.filter(id => id !== todoId));
+        setTodosIds(prev => prev.filter(id => id !== todoId));
       })
       .catch(() => {
         setError('Unable to delete a todo');
@@ -212,7 +211,7 @@ export const App: React.FC = () => {
       const todo = todos.find(t => t.id === editTodo);
 
       if (todo && editingValue.trim() !== todo.title) {
-        setUpdatingTodosIds(prev => [...prev, todo.id]);
+        setTodosIds(prev => [...prev, todo.id]);
         if (editingValue.trim() === '') {
           handleDeleteTodo(todo.id);
         } else {
@@ -233,7 +232,7 @@ export const App: React.FC = () => {
               }, 3000);
             })
             .finally(() => {
-              setUpdatingTodosIds(prev => prev.filter(id => id !== todo.id));
+              setTodosIds(prev => prev.filter(id => id !== todo.id));
             });
         }
       } else {
@@ -353,10 +352,7 @@ export const App: React.FC = () => {
               <div
                 data-cy="TodoLoader"
                 className={cn('modal overlay', {
-                  'is-active':
-                    todos.length > 0 &&
-                    (deletingTodosIds.includes(todo.id) ||
-                      updatingTodosIds.includes(todo.id)),
+                  'is-active': todos.length > 0 && todosIds.includes(todo.id),
                 })}
               >
                 <div className="modal-background has-background-white-ter" />
